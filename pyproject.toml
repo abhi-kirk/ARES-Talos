@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "talos-telemetry"
+version = "0.1.0"
+description = "Minimal telemetry viewer for streaming robot logs."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+  "pyserial>=3.5",
+  "orjson>=3.10",
+]
+
+[project.scripts]
+talos-telemetry = "talos_telemetry.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["talos_telemetry"]

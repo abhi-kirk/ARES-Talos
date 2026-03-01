@@ -48,3 +48,6 @@ MXTmpFiles/
 # Internal context files
 docs/internal_context.md
 docs/phased_plan.md
+
+
+.venv/*

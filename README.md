@@ -8,6 +8,11 @@
 
 The project applies embedded systems, control theory, and observability tools to bridge software engineering with robotics hardware, following a phased approach to systematically manage complexity.
 
+## High-Level Architecture
+<p align="center">
+  <img src="images/architecture.png" alt="Talos Architecture" width="700"/>
+</p>
+
 ## Hardware Overview
 - **Chassis and Actuation**: [Yahboom 2WD kit](https://category.yahboom.net/products/sbr-chassis-kit) with [JGB37-520 encoder motors](https://www.aslongdcmotor.com/photo/aslongdcmotor/document/26547/37mm%20Round%20Spur%20Gear%20Motor_PDF00.pdf) and [Sabertooth 2x12 driver](https://www.dimensionengineering.com/datasheets/Sabertooth2x12.pdf).
 - **Real-Time Controller**: [STM32 NUCLEO-F446RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f446re.html) for inner-loop control.
@@ -39,7 +44,14 @@ graph TD
     E -->|UDP| F[PlotJuggler Visualization]
 ```
 
-## Next Steps
-Phase 2 adds IMU-based state estimation, advancing to STM32 balance control. Subsequent phases incorporate Jetson MPC, vision, and Foxglove-enabled simulation-to-topics testing with comparative analysis.
+## Roadmap
+The project advances through structured phases to ensure robust development:
 
-For architecture diagrams and wiring details, see `/docs`. Contributions or discussions welcome—open an issue.
+- **Phase 0** (Completed): Bench-top PWM sanity check for motor driver calibration and basic actuation verification.
+- **Phase 1** (Completed): Encoder integration and independent wheel velocity control with PI loops.
+- **Phase 2**: IMU integration for state estimation (pitch, rate, velocity) and foundational telemetry.
+- **Phase 3**: STM32-based PID balance control, with Foxglove for observability and replay.
+- **Phase 4**: Jetson integration for setpoints, logging, and hierarchical architecture.
+- **Phase 5**: Transition to LQR state feedback for enhanced stability.
+- **Phase 6**: Outer-loop MPC on Jetson, incorporating vision.
+- **Phase 7**: Extensions including disturbance rejection and learning-based controls.

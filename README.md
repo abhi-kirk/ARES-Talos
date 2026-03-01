@@ -10,7 +10,7 @@ The project applies embedded systems, control theory, and observability tools to
 
 ## High-Level Architecture
 <p align="center">
-  <img src="images/architecture.png" alt="Talos Architecture" width="700"/>
+  <img src="images/architecture.png" alt="Talos Architecture" width="850"/>
 </p>
 
 ## Hardware Overview
@@ -30,7 +30,7 @@ With wheels elevated for safety, this phase integrates encoders and implements p
 Telemetry flows from the STM32 via [UART](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver-transmitter) to a Python bridge, visualized in [PlotJuggler](https://plotjuggler.io/) for analysis. The plots demonstrate velocity errors converging under step references, with moving RMS metrics illustrating control performance.
 
 <p align="center">
-  <img src="images/pid-plots.gif" alt="PI Velocity Control Telemetry" width="800"/>
+  <img src="images/pid-plots.gif" alt="PI Velocity Control Telemetry" width="850"/>
 </p>
 
 Firmware is implemented in C using [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html). Custom modules handle encoder velocity estimation (quadrature timer-based ticks/sec computation, convertible to rad/s or m/s) and PI control (with integral limits, output clamping, and deadband compensation for stiction). The main loop initializes peripherals, executes PI steps at `~100 Hz`, applies PWM outputs, and logs metrics.

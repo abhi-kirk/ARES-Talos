@@ -1,0 +1,69 @@
+{
+  "folders": [
+    { "path": ".", "name": "ARES-Talos (root)" },
+    { "path": "firmware/stm32/talos-pid-init", "name": "firmware" }
+  ],
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "firmware: Build",
+        "type": "shell",
+        "command": "make",
+        "args": ["-C", "${workspaceFolder:firmware}/Debug", "-j4"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "problemMatcher": {
+          "owner": "gcc",
+          "fileLocation": ["relative", "${workspaceFolder:firmware}"],
+          "pattern": {
+            "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      },
+      {
+        "label": "firmware: Flash",
+        "type": "shell",
+        "command": "openocd",
+        "args": [
+          "-f", "board/st_nucleo_f4.cfg",
+          "-c", "program ${workspaceFolder:firmware}/Debug/talos-pid-init.elf verify reset exit"
+        ],
+        "dependsOn": "firmware: Build",
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "firmware: Clean",
+        "type": "shell",
+        "command": "make",
+        "args": ["-C", "${workspaceFolder:firmware}/Debug", "clean"],
+        "group": "build",
+        "problemMatcher": []
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "firmware: Debug (OpenOCD)",
+        "type": "cortex-debug",
+        "request": "launch",
+        "servertype": "openocd",
+        "configFiles": ["board/st_nucleo_f4.cfg"],
+        "executable": "${workspaceFolder:firmware}/Debug/talos-pid-init.elf",
+        "runToEntryPoint": "main",
+        "preLaunchTask": "firmware: Build",
+        "showDevDebugOutput": "none"
+      }
+    ]
+  }
+}

@@ -46,8 +46,9 @@ MXTmpFiles/
 ._*
 
 # Internal context files
-docs/internal_context.md
-docs/phased_plan.md
+CLAUDE.md
 
 
 .venv/*
+.claude/*
+.vscode/*

@@ -1,21 +1,11 @@
-import re
 import time
 import socket
 import orjson
 import serial
 
 # Example line:
-# vref=300 vL=166.7 vR=333.3 uL=69.6 uR=60.5 pL=1569 pR=1440
-
-LINE_RE = re.compile(
-    r"vref=(?P<vref>-?\d+(\.\d+)?)\s+"
-    r"vL=(?P<vL>-?\d+(\.\d+)?)\s+"
-    r"vR=(?P<vR>-?\d+(\.\d+)?)\s+"
-    r"uL=(?P<uL>-?\d+(\.\d+)?)\s+"
-    r"uR=(?P<uR>-?\d+(\.\d+)?)\s+"
-    r"pL=(?P<pL>-?\d+)\s+"
-    r"pR=(?P<pR>-?\d+)"
-)
+# 1727497,500.00,0.00,-0.00,200.00,200.00,1700,1300
+# columns: mcu_ts,vref,vL,vR,uL,uR,pL,pR
 
 def main():
     SERIAL_PORT = "/dev/tty.usbmodem11103"
@@ -37,30 +27,35 @@ def main():
         except Exception:
             continue
 
-        m = LINE_RE.search(line)
-        if not m:
+        parts = line.split(",")
+        if len(parts) != 8:
+            print(f"[no match] {line}")
             continue
 
-        d = m.groupdict()
+        try:
+            _, vref, vL, vR, uL, uR, pL, pR = parts
+            vref, vL, vR, uL, uR = float(vref), float(vL), float(vR), float(uL), float(uR)
+            pL, pR = int(pL), int(pR)
+        except ValueError:
+            print(f"[parse error] {line}")
+            continue
 
-        eL = float(d["vref"]) - float(d["vL"])
-        eR = float(d["vref"]) - float(d["vR"])
-
-        # PlotJuggler needs a timestamp key; we'll call it "ts"
         msg = {
-            "ts": round(time.time(), 6),
-            "vref": float(d["vref"]),
-            "vL": float(d["vL"]),
-            "vR": float(d["vR"]),
-            "uL": float(d["uL"]),
-            "uR": float(d["uR"]),
-            "pL": int(d["pL"]),
-            "pR": int(d["pR"]),
-            "eL": eL,
-            "eR": eR,
+            "timestamp": round(time.time(), 6),
+            "vref": vref,
+            "vL": vL,
+            "vR": vR,
+            "uL": uL,
+            "uR": uR,
+            "pL": pL,
+            "pR": pR,
+            "eL": vref - vL,
+            "eR": vref - vR,
         }
 
-        sock.sendto(orjson.dumps(msg), (PJ_HOST, PJ_PORT))
+        payload = orjson.dumps(msg)
+        sock.sendto(payload, (PJ_HOST, PJ_PORT))
+        print(f"[sent] {payload}")
 
 if __name__ == "__main__":
     main()

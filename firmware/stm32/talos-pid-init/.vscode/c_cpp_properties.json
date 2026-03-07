@@ -1,0 +1,30 @@
+{
+  "configurations": [
+    {
+      "name": "STM32F446",
+      "includePath": [
+        "${workspaceFolder}/Core/Inc",
+        "${workspaceFolder}/Core/Src",
+        "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc",
+        "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
+        "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Include",
+        "${workspaceFolder}/Drivers/CMSIS/Include"
+      ],
+      "defines": [
+        "STM32F446xx",
+        "USE_HAL_DRIVER"
+      ],
+      "compilerPath": "/opt/homebrew/bin/arm-none-eabi-gcc",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-arm",
+      "compilerArgs": [
+        "-mcpu=cortex-m4",
+        "-mfpu=fpv4-sp-d16",
+        "-mfloat-abi=hard",
+        "-mthumb"
+      ]
+    }
+  ],
+  "version": 4
+}

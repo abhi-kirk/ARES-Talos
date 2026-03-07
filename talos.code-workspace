@@ -10,7 +10,7 @@
         "label": "firmware: Build",
         "type": "shell",
         "command": "make",
-        "args": ["-C", "${workspaceFolder:firmware}/Debug", "-j4"],
+        "args": ["-C", "${workspaceFolder:firmware}/Debug", "all", "-j4"],
         "group": {
           "kind": "build",
           "isDefault": true

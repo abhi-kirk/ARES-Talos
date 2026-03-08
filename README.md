@@ -17,7 +17,7 @@ The project applies embedded systems, control theory, and observability tools to
 - **Chassis and Actuation**: [Yahboom 2WD kit](https://category.yahboom.net/products/sbr-chassis-kit) with [JGB37-520 encoder motors](https://www.aslongdcmotor.com/photo/aslongdcmotor/document/26547/37mm%20Round%20Spur%20Gear%20Motor_PDF00.pdf) and [Sabertooth 2x12 driver](https://www.dimensionengineering.com/datasheets/Sabertooth2x12.pdf).
 - **Real-Time Controller**: [STM32 NUCLEO-F446RE](https://www.st.com/en/microcontrollers-microprocessors/stm32f446re.html) for inner-loop control.
 - **High-Level Compute**: [Jetson Orin Nano](https://developer.nvidia.com/embedded/learn/get-started-jetson-orin-nano-devkit) for planning, vision, and logging.
-- **Sensors**: [BNO055 IMU](https://www.bosch-sensortec.com/media/boschsensortec/downloads/application_notes_1/bst-bno055-an007.pdf) (integration in progress).
+- **Sensors**: [BNO055 IMU](https://www.bosch-sensortec.com/media/boschsensortec/downloads/application_notes_1/bst-bno055-an007.pdf) for fused pitch and angular rate (onboard Kalman filter, I2C to STM32).
 - **Power**: [3S LiPo battery](https://genstattu.com/bw/) with safety features.
 
 <p align="center">
@@ -44,14 +44,22 @@ graph TD
     E -->|UDP| F[PlotJuggler Visualization]
 ```
 
+## Phase 2: IMU Integration and State Estimation
+
+Phase 2 integrates the BNO055 IMU to produce the full robot state vector `[θ, θ̇, v]` — tilt angle, tilt rate, and wheel velocity. The BNO055 runs onboard sensor fusion (accel + gyro Kalman filter), outputting drift-free Euler pitch and low-latency Gyro X directly over I2C. Axis mapping and sign conventions were validated on the bench before chassis assembly.
+
+Telemetry was extended to 11 signals and all IMU channels are live in PlotJuggler alongside the existing wheel velocity data.
+
 ## Roadmap
 The project advances through structured phases to ensure robust development:
 
 - **Phase 0** (Completed): Bench-top PWM sanity check for motor driver calibration and basic actuation verification.
 - **Phase 1** (Completed): Encoder integration and independent wheel velocity control with PI loops.
-- **Phase 2**: IMU integration for state estimation (pitch, rate, velocity) and foundational telemetry.
-- **Phase 3**: STM32-based PID balance control, with Foxglove for observability and replay.
-- **Phase 4**: Jetson integration for setpoints, logging, and hierarchical architecture.
+- **Phase 2** (Completed): BNO055 IMU integration for state estimation (pitch θ, pitch rate θ̇) with validated sign conventions.
+- **Phase 2.5** (In progress): Physical chassis assembly onto the Yahboom 2WD platform.
+- **Phase 3**: STM32-based PID balance control.
+- **Phase 4**: Jetson integration for setpoints, ROS2, and MCAP logging.
+- **Phase 4.5**: Foxglove live visualization and telemetry routing via Jetson.
 - **Phase 5**: Transition to LQR state feedback for enhanced stability.
 - **Phase 6**: Outer-loop MPC on Jetson, incorporating vision.
 - **Phase 7**: Extensions including disturbance rejection and learning-based controls.

@@ -3,6 +3,7 @@
 
 #include "encoder_vel.h"
 #include "pi_vel.h"
+#include "bno055.h"
 
 TIM_HandleTypeDef htim1;  // PWM left  (TIM1 CH1)
 TIM_HandleTypeDef htim4;  // PWM right (TIM4 CH1)
@@ -10,6 +11,10 @@ TIM_HandleTypeDef htim2;  // Encoder right (TIM2)
 TIM_HandleTypeDef htim3;  // Encoder left  (TIM3)
 
 UART_HandleTypeDef huart2;
+I2C_HandleTypeDef  hi2c1;
+
+BNO055 imu;
+static uint8_t imu_ok = 0;
 
 EncoderVel enc_left;
 EncoderVel enc_right;
@@ -55,6 +60,7 @@ int _write(int file, char *ptr, int len)
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_I2C1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM2_Init(void);
@@ -67,6 +73,7 @@ int main(void)
 
     MX_GPIO_Init();
     MX_USART2_UART_Init();
+    MX_I2C1_Init();
     MX_TIM1_Init();
     MX_TIM4_Init();
     MX_TIM2_Init();
@@ -85,6 +92,14 @@ int main(void)
     set_pwm_right_us(NEUTRAL_US);
     HAL_Delay(200);
 
+    // IMU init (blocks ~700 ms for chip startup)
+    if (BNO055_Init(&imu, &hi2c1) == HAL_OK) {
+        imu_ok = 1;
+        printf("# BNO055 OK\r\n");
+    } else {
+        printf("# BNO055 FAIL - check wiring/address\r\n");
+    }
+
     // Encoder params (your measured values)
     const float TICKS_PER_REV  = 659.0f;
     const float WHEEL_RADIUS_M = 0.03375f;
@@ -102,15 +117,18 @@ int main(void)
     uint32_t t0 = HAL_GetTick();
     uint32_t t_prev = t0;
 
+    // Print CSV header for host-side parsers
+    printf("# mcu_ts,loop_dt,pitch,gyro_y,vref,vL,vR,uL,uR,pL,pR\r\n");
 
     while (1)
     {
         uint32_t t_now = HAL_GetTick();
-        float dt = (float)(t_now - t_prev) * 0.001f;
+        uint32_t loop_dt = t_now - t_prev;   // ms, for jitter monitoring
+        float dt = (float)loop_dt * 0.001f;
         if (dt <= 0.0f) continue;
         t_prev = t_now;
 
-        // 0-5s: forward, 5-7s: stop, then repeat
+        // 0-10s: forward, 10-15s: stop, then repeat
         uint32_t elapsed = t_now - t0;
         if (elapsed < 10000)      vref = 500.0f;
         else if (elapsed < 15000) vref = 0.0f;
@@ -121,6 +139,10 @@ int main(void)
             EncoderVel_Reset(&enc_left);
             EncoderVel_Reset(&enc_right);
         }
+
+        // IMU: read pitch (Euler, deg) and pitch rate (Gyro X = same axis as Euler Pitch)
+        float pitch  = imu_ok ? BNO055_GetPitch(&imu)  : 0.0f;
+        float gyro_x = imu_ok ? BNO055_GetGyroX(&imu)  : 0.0f;
 
         // Measured velocities with consistent sign
         float vL = (float)MEAS_SIGN_L * EncoderVel_UpdateTicksPerSec(&enc_left, dt);
@@ -137,12 +159,15 @@ int main(void)
         set_pwm_left_us(pL);
         set_pwm_right_us(pR);
 
-        // Log ~10 Hz
+        // Log ~20 Hz (every 5th iteration at ~5 ms loop = 100 ms period)
         static int decim = 0;
-        if (++decim >= 10) {
+        if (++decim >= 5) {
             decim = 0;
-            printf("%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u\r\n",
+            printf("%lu,%lu,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%u,%u\r\n",
                    t_now,
+                   loop_dt,
+                   pitch,
+                   gyro_x,
                    vref,
                    vL,
                    vR,
@@ -202,6 +227,27 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief I2C1 Initialization Function (PB8=SCL, PB9=SDA, 400 kHz)
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+    hi2c1.Instance             = I2C1;
+    hi2c1.Init.ClockSpeed      = 400000;
+    hi2c1.Init.DutyCycle       = I2C_DUTYCYCLE_2;
+    hi2c1.Init.OwnAddress1     = 0;
+    hi2c1.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
+    hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    hi2c1.Init.OwnAddress2     = 0;
+    hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    hi2c1.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
+    if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
 
 /**

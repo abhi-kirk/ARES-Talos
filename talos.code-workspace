@@ -9,8 +9,7 @@
       {
         "label": "firmware: Build",
         "type": "shell",
-        "command": "make",
-        "args": ["-C", "${workspaceFolder:firmware}/Debug", "all", "-j4"],
+        "command": "export PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin:$PATH && make -C ${workspaceFolder:firmware}/Debug all -j4",
         "group": {
           "kind": "build",
           "isDefault": true
@@ -43,8 +42,7 @@
       {
         "label": "firmware: Clean",
         "type": "shell",
-        "command": "make",
-        "args": ["-C", "${workspaceFolder:firmware}/Debug", "clean"],
+        "command": "export PATH=/Applications/ArmGNUToolchain/15.2.rel1/arm-none-eabi/bin:$PATH && make -C ${workspaceFolder:firmware}/Debug clean",
         "group": "build",
         "problemMatcher": []
       }
